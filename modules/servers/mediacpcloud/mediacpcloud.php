@@ -57,9 +57,9 @@ function mediacpcloud_MetaData()
     return array(
         'DisplayName' => 'MediaCP Cloud',
         'APIVersion' => '1.1', // Use API Version 1.1
-        'RequiresServer' => false, // Set true if module requires a server to work
-        'DefaultNonSSLPort' => '1111', // Default Non-SSL Connection Port
-        'DefaultSSLPort' => '1112', // Default SSL Connection Port
+        'RequiresServer' => true, // Set true if module requires a server to work
+        'DefaultNonSSLPort' => '80', // Default Non-SSL Connection Port
+        'DefaultSSLPort' => '443', // Default SSL Connection Port
         'ServiceSingleSignOnLabel' => 'Login to Panel as User',
         'AdminSingleSignOnLabel' => 'Login to Panel as Admin',
     );
@@ -142,7 +142,9 @@ function mediacpcloud_MetricProvider($params)
  */
 function mediacpcloud_LoaderFunction($params)
 {
-    $response = get('/api/plans');
+    $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/plans');
+
+    $response = request('get', $requestUrl, $params['serveraccesshash']);
 
     // Attempt to decode the response
     $packages = json_decode($response, true);
@@ -195,12 +197,18 @@ function mediacpcloud_CreateAccount(array $params)
             'password' => $params['password'],
             'plan_id' => $params['configoption4']
         ];
-        $response = post('/api/tenants/'. $params['serverid'] . '/customers', $payload);
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');
+        $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
 
         logModuleCall(
-            'mediacptenancies',
+            'mediacpcloud',
             __FUNCTION__,
-            json_encode($payload),
+            json_encode([
+                'params' => $params,
+                'url' => $requestUrl,
+                'token' => $params['serveraccesshash'],
+                'payload' => $payload
+            ]),
             $response,
             $response
         );
@@ -221,7 +229,7 @@ function mediacpcloud_CreateAccount(array $params)
 
             if ($results['result'] !== 'success') {
                 logModuleCall(
-                    'mediacptenancies',
+                    'mediacpcloud',
                     __FUNCTION__,
                     json_encode([
                         'domain' => $domain,
@@ -264,8 +272,25 @@ function mediacpcloud_CreateAccount(array $params)
 function mediacpcloud_SuspendAccount(array $params)
 {
     try {
-        // Call the service's suspend function, using the values provided by
-        // WHMCS in `$params`.
+        $payload = [
+            'email' => $params['clientsdetails']['email'],
+        ];
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/suspend');
+        $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+
+        logModuleCall(
+            'mediacpcloud',
+            __FUNCTION__,
+            json_encode([
+                'params' => $params,
+                'url' => $requestUrl,
+                'token' => $params['serveraccesshash'],
+                'payload' => $payload
+            ]),
+            $response,
+            $response
+        );
+
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -298,8 +323,24 @@ function mediacpcloud_SuspendAccount(array $params)
 function mediacpcloud_UnsuspendAccount(array $params)
 {
     try {
-        // Call the service's unsuspend function, using the values provided by
-        // WHMCS in `$params`.
+        $payload = [
+            'email' => $params['clientsdetails']['email'],
+        ];
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/unsuspend');
+        $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+
+        logModuleCall(
+            'mediacpcloud',
+            __FUNCTION__,
+            json_encode([
+                'params' => $params,
+                'url' => $requestUrl,
+                'token' => $params['serveraccesshash'],
+                'payload' => $payload
+            ]),
+            $response,
+            $response
+        );
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -854,70 +895,54 @@ function mediacpcloud_ClientArea(array $params)
     }
 }
 
-if (!function_exists('get')) {
-    function get($url)
+if (!function_exists('requestUrl')) {
+    function requestUrl($serverhttpprefix, $serverhostname, $serverport, $path)
     {
-        return request('get', $url);
-    }
-}
-
-if (!function_exists('post')) {
-    function post($url, $params = [])
-    {
-        return request('post', $url, $params);
-    }
-}
-
-if (!function_exists('delete')) {
-    function delete($url, $params = [])
-    {
-        return request('delete', $url, $params);
+        return sprintf('%s://%s:%s%s', $serverhttpprefix, $serverhostname, $serverport, $path);
     }
 }
 
 if (!function_exists('request')) {
-    function request($action, $url, $params = [])
+    function request($action, $url, $token, $params = [])
     {
-        $baseUrl = 'https://staging.cloud.mediacp.net:4433';
         $payload = \json_encode($params);
 
         // Prepare new cURL resource
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, $baseUrl . $url);
-        \curl_setopt($ch, CURLOPT_PORT, 4433);
+        \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLINFO_HEADER_OUT, true);
 
-        if ($action === 'get') {
-        // Set HTTP Header for POST request
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
+        switch ($action) {
+            case 'get':
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Accept: application/json',
-                ]
-            );
-        }
+                    'Authorization: Bearer ' . $token
+                ]);
+                break;
+            case 'post':
+                \curl_setopt($ch, CURLOPT_POST, true);
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
 
-        if ($action === 'post') {
-            \curl_setopt($ch, CURLOPT_POST, true);
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-
-            // Set HTTP Header for POST request
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
+                // Set HTTP Header for POST request
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Content-Type: application/json',
+                        'Accept: application/json',
+                        'Content-Length: ' . strlen($payload),
+                        'Authorization: Bearer ' . $token
+                    ]
+                );
+                break;
+            case 'delete':
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+                // Set HTTP Header for POST request
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Accept: application/json',
-                    'Content-Length: ' . strlen($payload)
-                ]
-            );
-        }
+                    'Authorization: Bearer .' . $token
+                ]);
+                break;
 
-        if ($action === 'delete') {
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-            // Set HTTP Header for POST request
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Accept: application/json',
-            ]);
         }
-
 
         // Submit the POST request
         $result = \curl_exec($ch);

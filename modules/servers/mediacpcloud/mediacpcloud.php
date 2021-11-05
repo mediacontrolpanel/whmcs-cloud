@@ -559,7 +559,7 @@ function mediacpcloud_AdminCustomButtonArray()
  * list of actions within the client area.
  *
  * @return array
- */
+ *
 function mediacpcloud_ClientAreaCustomButtonArray()
 {
     return array(
@@ -567,6 +567,7 @@ function mediacpcloud_ClientAreaCustomButtonArray()
         "Action 2 Display Value" => "actionTwoFunction",
     );
 }
+*/
 
 /**
  * Custom function for performing an additional action.
@@ -849,7 +850,7 @@ function mediacpcloud_AdminSingleSignOn(array $params)
  * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
  *
  * @return array
- */
+ *
 function mediacpcloud_ClientArea(array $params)
 {
     // Determine the requested action and set service call parameters based on
@@ -898,7 +899,7 @@ function mediacpcloud_ClientArea(array $params)
         );
     }
 }
-
+*/
 if (!function_exists('requestUrl')) {
     function requestUrl($serverhttpprefix, $serverhostname, $serverport, $path)
     {

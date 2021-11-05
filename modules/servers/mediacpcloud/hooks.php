@@ -35,7 +35,7 @@
  * @param array $params Parameters dependant upon hook function
  *
  * @return mixed Return dependant upon hook function
- */
+ 
 function hook_mediacpcloud_clientedit(array $params)
 {
     try {
@@ -45,13 +45,15 @@ function hook_mediacpcloud_clientedit(array $params)
         // Consider logging or reporting the error.
     }
 }
+*/
 
 /**
  * Register a hook with WHMCS.
  *
  * add_hook(string $hookPointName, int $priority, string|array|Closure $function)
- */
+ *
 add_hook('ClientEdit', 1, 'hook_mediacpcloud_clientedit');
+*/
 
 /**
  * Insert a service item to the client area navigation bar.
@@ -61,7 +63,7 @@ add_hook('ClientEdit', 1, 'hook_mediacpcloud_clientedit');
  * products/services assigned to the module.
  *
  * @param \WHMCS\View\Menu\Item $menu
- */
+ *
 add_hook('ClientAreaPrimaryNavbar', 1, function ($menu)
 {
     // Check whether the services menu exists.
@@ -77,6 +79,7 @@ add_hook('ClientAreaPrimaryNavbar', 1, function ($menu)
             );
     }
 });
+*/
 
 /**
  * Render a custom sidebar panel in the secondary sidebar.
@@ -87,7 +90,7 @@ add_hook('ClientAreaPrimaryNavbar', 1, function ($menu)
  * front of any other panels defined up to this point.
  *
  * @param \WHMCS\View\Menu\Item $secondarySidebar
- */
+ *
 add_hook('ClientAreaSecondarySidebar', 1, function ($secondarySidebar)
 {
     // determine if we are on a page containing My Services Actions
@@ -118,3 +121,4 @@ add_hook('ClientAreaSecondarySidebar', 1, function ($secondarySidebar)
 
     }
 });
+*/

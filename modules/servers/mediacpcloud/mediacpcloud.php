@@ -92,6 +92,7 @@ function mediacpcloud_ConfigOptions()
 {
     return array(
         // a text field type allows for single line text input
+        /*
         'cdnBandwidth' => array(
             'FriendlyName' => 'CDN Bandwidth',
             'Type' => 'text',
@@ -112,6 +113,7 @@ function mediacpcloud_ConfigOptions()
             'Default' => '250',
             'Description' => 'GB',
         ),
+        */
         'plan' => [
             'FriendlyName' => 'Plan',
             'Type' => 'text',
@@ -120,6 +122,7 @@ function mediacpcloud_ConfigOptions()
             'SimpleMode' => true,
         ],
         // a password field type allows for masked text input
+        /*
         'diskSpace' => array(
             'FriendlyName' => 'Disk Space',
             'Type' => 'text',
@@ -127,6 +130,7 @@ function mediacpcloud_ConfigOptions()
             'Default' => '50',
             'Description' => 'GB',
         ),
+        */
     );
 }
 
@@ -195,7 +199,7 @@ function mediacpcloud_CreateAccount(array $params)
             'name'  => $params['clientsdetails']['fullname'],
             'email' => $params['clientsdetails']['email'],
             'password' => $params['password'],
-            'plan_id' => $params['configoption4']
+            'plan_id' => $params['configoption1']
         ];
         $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');
         $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);

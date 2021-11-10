@@ -195,6 +195,7 @@ function mediacpcloud_CreateAccount(array $params)
             'name'  => $params['clientsdetails']['fullname'],
             'email' => $params['clientsdetails']['email'],
             'password' => $params['password'],
+            'password_confirmation' => $params['password'],
             'plan_id' => $params['configoption4']
         ];
         $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');

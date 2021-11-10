@@ -92,6 +92,7 @@ function mediacpcloud_ConfigOptions()
 {
     return array(
         // a text field type allows for single line text input
+        /*
         'cdnBandwidth' => array(
             'FriendlyName' => 'CDN Bandwidth',
             'Type' => 'text',
@@ -112,6 +113,7 @@ function mediacpcloud_ConfigOptions()
             'Default' => '250',
             'Description' => 'GB',
         ),
+        */
         'plan' => [
             'FriendlyName' => 'Plan',
             'Type' => 'text',
@@ -120,6 +122,7 @@ function mediacpcloud_ConfigOptions()
             'SimpleMode' => true,
         ],
         // a password field type allows for masked text input
+        /*
         'diskSpace' => array(
             'FriendlyName' => 'Disk Space',
             'Type' => 'text',
@@ -127,6 +130,7 @@ function mediacpcloud_ConfigOptions()
             'Default' => '50',
             'Description' => 'GB',
         ),
+        */
     );
 }
 
@@ -195,8 +199,8 @@ function mediacpcloud_CreateAccount(array $params)
             'name'  => $params['clientsdetails']['fullname'],
             'email' => $params['clientsdetails']['email'],
             'password' => $params['password'],
+            'plan_id' => $params['configoption1'],
             'password_confirmation' => $params['password'],
-            'plan_id' => $params['configoption4']
         ];
         $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');
         $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
@@ -556,7 +560,7 @@ function mediacpcloud_AdminCustomButtonArray()
  * list of actions within the client area.
  *
  * @return array
- */
+ *
 function mediacpcloud_ClientAreaCustomButtonArray()
 {
     return array(
@@ -564,6 +568,7 @@ function mediacpcloud_ClientAreaCustomButtonArray()
         "Action 2 Display Value" => "actionTwoFunction",
     );
 }
+*/
 
 /**
  * Custom function for performing an additional action.
@@ -846,7 +851,7 @@ function mediacpcloud_AdminSingleSignOn(array $params)
  * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
  *
  * @return array
- */
+ *
 function mediacpcloud_ClientArea(array $params)
 {
     // Determine the requested action and set service call parameters based on
@@ -895,7 +900,7 @@ function mediacpcloud_ClientArea(array $params)
         );
     }
 }
-
+*/
 if (!function_exists('requestUrl')) {
     function requestUrl($serverhttpprefix, $serverhostname, $serverport, $path)
     {

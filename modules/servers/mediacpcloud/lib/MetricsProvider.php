@@ -38,25 +38,25 @@ class MetricsProvider implements ProviderInterface
     {
         return [
             new Metric(
-                'cdnBandwidth',
+                'cdn_bandwidth',
                 'CDN Bandwidth',
                 MetricInterface::TYPE_PERIOD_MONTH,
                 new GigaBytes
             ),
             new Metric(
-                'mslEgressBandwidth',
+                'egress_bandwidth',
                 'MSL Egress Bandwidth',
                 MetricInterface::TYPE_PERIOD_MONTH,
                 new GigaBytes()
             ),
             new Metric(
-                'diskSpace',
+                'storage',
                 'Disk Space',
                 MetricInterface::TYPE_PERIOD_MONTH,
                 new GigaBytes()
             ),
             new Metric(
-                'channels',
+                'channels_count',
                 'Channels',
                 MetricInterface::TYPE_SNAPSHOT,
                 new WholeNumber('Channels', 'channel', 'channels')
@@ -75,9 +75,9 @@ class MetricsProvider implements ProviderInterface
         return $usage;
     }
 
-    public function tenantUsage($tenant)
+    public function tenantUsage($customerId)
     {
-        $userData = $this->apiCall('user_stats');
+        $userData = $this->apiCall('/api/customers/' . $customerId. '/stats');
 
         return $this->wrapUserData($userData);
     }
@@ -102,6 +102,59 @@ class MetricsProvider implements ProviderInterface
 
     private function apiCall($action)
     {
-        // make remote call with $moduleParams
+        $requestUrl = requestUrl($this->moduleParams['serverhttpprefix'], $this->moduleParams['serverhostname'], $this->moduleParams['serverport'], $action);
+        $response = request('get', $requestUrl, $this->moduleParams['serveraccesshash']);
+
+        return \json_decode($response, true);
+    }
+
+    private function request($action, $url, $token, $params = [])
+    {
+        $payload = \json_encode($params);
+
+        // Prepare new cURL resource
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, $url);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+
+        switch ($action) {
+            case 'get':
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Accept: application/json',
+                    'Authorization: Bearer ' . $token
+                ]);
+                break;
+            case 'post':
+                \curl_setopt($ch, CURLOPT_POST, true);
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+                // Set HTTP Header for POST request
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Content-Type: application/json',
+                        'Accept: application/json',
+                        'Content-Length: ' . strlen($payload),
+                        'Authorization: Bearer ' . $token
+                    ]
+                );
+                break;
+            case 'delete':
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+                // Set HTTP Header for POST request
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Accept: application/json',
+                    'Authorization: Bearer .' . $token
+                ]);
+                break;
+
+        }
+
+        // Submit the POST request
+        $result = \curl_exec($ch);
+
+        // Close cURL session handle
+        \curl_close($ch);
+
+        return $result;
     }
 }

@@ -91,29 +91,6 @@ function mediacpcloud_MetaData()
 function mediacpcloud_ConfigOptions()
 {
     return array(
-        // a text field type allows for single line text input
-        /*
-        'cdnBandwidth' => array(
-            'FriendlyName' => 'CDN Bandwidth',
-            'Type' => 'text',
-            'Size' => '25',
-            'Default' => '250',
-            'Description' => 'GB',
-        ),
-        'channels' => array(
-            'FriendlyName' => '# Channels',
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => 'Leave blank for no limit',
-        ),
-        'mslEgressBandwidth' => array(
-            'FriendlyName' => 'MSL Egress Bandwidth',
-            'Type' => 'text',
-            'Size' => '25',
-            'Default' => '250',
-            'Description' => 'GB',
-        ),
-        */
         'plan' => [
             'FriendlyName' => 'Plan',
             'Type' => 'text',
@@ -121,16 +98,6 @@ function mediacpcloud_ConfigOptions()
             'Loader' => 'mediacpcloud_LoaderFunction',
             'SimpleMode' => true,
         ],
-        // a password field type allows for masked text input
-        /*
-        'diskSpace' => array(
-            'FriendlyName' => 'Disk Space',
-            'Type' => 'text',
-            'Size' => '25',
-            'Default' => '50',
-            'Description' => 'GB',
-        ),
-        */
     );
 }
 
@@ -220,31 +187,49 @@ function mediacpcloud_CreateAccount(array $params)
 
         $customer = \json_decode($response, true);
 
-        if (isset($customer['tenant']['domains'])) {
-            if (count($customer['tenant']['domains']) === 1) {
-                $domain = $customer['tenant']['domains'][0]['domain'];
-            } else {
-                $domain = $customer['tenant']['domains'][1]['domain'];
-            }
+        $results = localAPI('UpdateClientProduct', [
+            'domain' => $customer['id'],
+            'serviceid' => $params['serviceid']
+        ]);
 
-            $results = localAPI('UpdateClientProduct', [
-                'domain' => $domain,
-                'serviceid' => $params['serviceid']
-            ]);
-
-            if ($results['result'] !== 'success') {
-                logModuleCall(
-                    'mediacpcloud',
-                    __FUNCTION__,
-                    json_encode([
-                        'domain' => $domain,
-                        'serviceid' => $params['serviceid']
-                    ]),
-                    $results['result'],
-                    $results['result']
-                );
-            }
+        if ($results['result'] !== 'success') {
+            logModuleCall(
+                'mediacpcloud',
+                __FUNCTION__,
+                json_encode([
+                    'domain' => $customer['id'],
+                    'serviceid' => $params['serviceid']
+                ]),
+                $results['result'],
+                $results['result']
+            );
         }
+
+//        if (isset($customer['tenant']['domains'])) {
+//            if (count($customer['tenant']['domains']) === 1) {
+//                $domain = $customer['tenant']['domains'][0]['domain'];
+//            } else {
+//                $domain = $customer['tenant']['domains'][1]['domain'];
+//            }
+//
+//            $results = localAPI('UpdateClientProduct', [
+//                'domain' => $domain,
+//                'serviceid' => $params['serviceid']
+//            ]);
+//
+//            if ($results['result'] !== 'success') {
+//                logModuleCall(
+//                    'mediacpcloud',
+//                    __FUNCTION__,
+//                    json_encode([
+//                        'domain' => $domain,
+//                        'serviceid' => $params['serviceid']
+//                    ]),
+//                    $results['result'],
+//                    $results['result']
+//                );
+//            }
+//        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -377,8 +362,24 @@ function mediacpcloud_UnsuspendAccount(array $params)
 function mediacpcloud_TerminateAccount(array $params)
 {
     try {
-        // Call the service's terminate function, using the values provided by
-        // WHMCS in `$params`.
+        $payload = [
+            'email' => $params['clientsdetails']['email'],
+        ];
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/terminate');
+        $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+
+        logModuleCall(
+            'mediacpcloud',
+            __FUNCTION__,
+            json_encode([
+                'params' => $params,
+                'url' => $requestUrl,
+                'token' => $params['serveraccesshash'],
+                'payload' => $payload
+            ]),
+            $response,
+            $response
+        );
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -460,18 +461,26 @@ function mediacpcloud_ChangePassword(array $params)
 function mediacpcloud_ChangePackage(array $params)
 {
     try {
-        // Call the service's change password function, using the values
-        // provided by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'username' => 'The service username',
-        //     'configoption1' => 'The new service disk space',
-        //     'configoption3' => 'Whether or not to enable FTP',
-        // )
-        // ```
+
+        $payload = [
+            'plan_id'    => $params['configoption1'],
+        ];
+
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/' . $params['domain']);
+        $response = request('put', $requestUrl, $params['serveraccesshash'], $payload);
+
+        logModuleCall(
+            'mediacptenancies',
+            __FUNCTION__,
+            json_encode([
+                'url' => $requestUrl,
+                'method' => 'put',
+                'token' => $params['serveraccesshash'],
+                'payload' => $payload
+            ]),
+            $response,
+            $response
+        );
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -545,8 +554,8 @@ function mediacpcloud_TestConnection(array $params)
 function mediacpcloud_AdminCustomButtonArray()
 {
     return array(
-        "Button 1 Display Value" => "buttonOneFunction",
-        "Button 2 Display Value" => "buttonTwoFunction",
+//        "Button 1 Display Value" => "buttonOneFunction",
+//        "Button 2 Display Value" => "buttonTwoFunction",
     );
 }
 
@@ -665,16 +674,17 @@ function mediacpcloud_AdminServicesTabFields(array $params)
         // `$params`.
         $response = array();
 
+        return [];
         // Return an array based on the function's response.
-        return array(
-            'Number of Apples' => (int) $response['numApples'],
-            'Number of Oranges' => (int) $response['numOranges'],
-            'Last Access Date' => date("Y-m-d H:i:s", $response['lastLoginTimestamp']),
-            'Something Editable' => '<input type="hidden" name="mediacpcloud_original_uniquefieldname" '
-                . 'value="' . htmlspecialchars($response['textvalue']) . '" />'
-                . '<input type="text" name="mediacpcloud_uniquefieldname"'
-                . 'value="' . htmlspecialchars($response['textvalue']) . '" />',
-        );
+//        return array(
+//            'Number of Apples' => (int) $response['numApples'],
+//            'Number of Oranges' => (int) $response['numOranges'],
+//            'Last Access Date' => date("Y-m-d H:i:s", $response['lastLoginTimestamp']),
+//            'Something Editable' => '<input type="hidden" name="mediacpcloud_original_uniquefieldname" '
+//                . 'value="' . htmlspecialchars($response['textvalue']) . '" />'
+//                . '<input type="text" name="mediacpcloud_uniquefieldname"'
+//                . 'value="' . htmlspecialchars($response['textvalue']) . '" />',
+//        );
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -945,6 +955,20 @@ if (!function_exists('request')) {
                 \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Accept: application/json',
                     'Authorization: Bearer .' . $token
+                ]);
+                break;
+            case 'put':
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+                // return the transfer as a string
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                \curl_setopt($ch, CURLOPT_POST, 1);
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                // Set HTTP Header for POST request
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Accept: application/json',
+                    'Content-Length: ' . strlen($payload),
+                    'Authorization: Bearer ' . $token
                 ]);
                 break;
 

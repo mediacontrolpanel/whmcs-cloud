@@ -365,15 +365,16 @@ function mediacpcloud_TerminateAccount(array $params)
         $payload = [
             'email' => $params['clientsdetails']['email'],
         ];
-        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/terminate');
-        $response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+
+        $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/' . $params['domain']);
+        $response = request('delete', $requestUrl, $params['serveraccesshash']);
 
         logModuleCall(
             'mediacpcloud',
             __FUNCTION__,
-            json_encode([
-                'params' => $params,
+            \json_encode([
                 'url' => $requestUrl,
+                'method' => 'delete',
                 'token' => $params['serveraccesshash'],
                 'payload' => $payload
             ]),
@@ -461,7 +462,6 @@ function mediacpcloud_ChangePassword(array $params)
 function mediacpcloud_ChangePackage(array $params)
 {
     try {
-
         $payload = [
             'plan_id'    => $params['configoption1'],
         ];
@@ -927,7 +927,7 @@ if (!function_exists('request')) {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+//        \curl_setopt($ch, CURLINFO_HEADER_OUT, true);
 
         switch ($action) {
             case 'get':
@@ -951,16 +951,15 @@ if (!function_exists('request')) {
                 break;
             case 'delete':
                 \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+
                 // Set HTTP Header for POST request
                 \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Accept: application/json',
-                    'Authorization: Bearer .' . $token
+                    'Authorization: Bearer ' . $token
                 ]);
                 break;
             case 'put':
                 \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-                // return the transfer as a string
-                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 \curl_setopt($ch, CURLOPT_POST, 1);
                 \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
                 // Set HTTP Header for POST request

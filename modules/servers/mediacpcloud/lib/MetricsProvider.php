@@ -66,11 +66,19 @@ class MetricsProvider implements ProviderInterface
 
     public function usage()
     {
-        $serverData = $this->apiCall('stats');
-        $usage = [];
-        foreach ($serverData as $data) {
-            $usage[$data['username']] = $this->wrapUserData($data);
-        }
+		$server = DB::table('tblservers')->find($this->moduleParams['serverid']);
+		$hosting = DB::table('tblhosting')
+		->leftJoin('tblproducts','tblproducts.id','=','tblhosting.packageid') #packageid
+		->where('server',$this->moduleParams['serverid'])
+		->where('domainstatus','Active');
+		
+		if ( $hosting->count() > 0 ){
+			
+			foreach($hosting->get() as $acc){
+				$usage[$acc->username] = $this->tenantUsage($acc->domain);
+			}
+			
+		}
 
         return $usage;
     }

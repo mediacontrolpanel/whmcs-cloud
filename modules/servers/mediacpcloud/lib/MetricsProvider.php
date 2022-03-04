@@ -66,6 +66,7 @@ class MetricsProvider implements ProviderInterface
 
     public function usage()
     {
+	$usage = [];
 	$server = DB::table('tblservers')->find($this->moduleParams['serverid']);
 	$hosting = DB::table('tblhosting')
 	->leftJoin('tblproducts','tblproducts.id','=','tblhosting.packageid') #packageid

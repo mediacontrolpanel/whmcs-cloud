@@ -9,6 +9,8 @@ use WHMCS\UsageBilling\Metrics\Units\GigaBytes;
 use WHMCS\UsageBilling\Metrics\Units\WholeNumber;
 use WHMCS\UsageBilling\Metrics\Usage;
 
+use Illuminate\Database\Capsule\Manager as DB;
+
 class MetricsProvider implements ProviderInterface
 {
     private $moduleParams = [];
@@ -73,13 +75,11 @@ class MetricsProvider implements ProviderInterface
 	->where('server',$this->moduleParams['serverid'])
 	->where('domainstatus','Active')
 	->where('servertype','mediacpcloud');
-
+		
 	if ( $hosting->count() > 0 ){
-
 		foreach($hosting->get() as $acc){
 			$usage[$acc->username] = $this->tenantUsage($acc->domain);
 		}
-
 	}
 
         return $usage;

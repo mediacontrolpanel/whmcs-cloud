@@ -68,6 +68,7 @@ class MetricsProvider implements ProviderInterface
 
     public function usage()
     {
+
 	$usage = [];
 	$server = DB::table('tblservers')->find($this->moduleParams['serverid']);
 	$hosting = DB::table('tblhosting')
@@ -75,11 +76,11 @@ class MetricsProvider implements ProviderInterface
 	->where('server',$this->moduleParams['serverid'])
 	->where('domainstatus','Active')
 	->where('servertype','mediacpcloud');
-		
+
 	if ( $hosting->count() > 0 ){
 		foreach($hosting->get() as $acc){
-			$usage[$acc->username] = $this->tenantUsage($acc->domain);
-		}
+			$usage[$acc->domain] = $this->tenantUsage($acc->domain);
+		}	
 	}
 
         return $usage;
@@ -88,7 +89,7 @@ class MetricsProvider implements ProviderInterface
     public function tenantUsage($customerId)
     {
         $userData = $this->apiCall('/api/customers/' . $customerId. '/stats');
-
+var_dump($userData);
         return $this->wrapUserData($userData);
     }
 

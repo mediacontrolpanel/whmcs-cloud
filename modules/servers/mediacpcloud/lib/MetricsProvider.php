@@ -89,7 +89,6 @@ class MetricsProvider implements ProviderInterface
     public function tenantUsage($customerId)
     {
         $userData = $this->apiCall('/api/customers/' . $customerId. '/stats');
-var_dump($userData);
         return $this->wrapUserData($userData);
     }
 

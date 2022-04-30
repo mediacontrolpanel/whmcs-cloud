@@ -187,6 +187,10 @@ function mediacpcloud_CreateAccount(array $params)
 
         $customer = \json_decode($response, true);
 
+        if (isset($customer['message'])) {
+            return $customer['message'];
+        }
+
         $results = localAPI('UpdateClientProduct', [
             'domain' => $customer['id'],
             'serviceid' => $params['serviceid']
@@ -203,33 +207,10 @@ function mediacpcloud_CreateAccount(array $params)
                 $results['result'],
                 $results['result']
             );
+
+            return $results['result'];
         }
 
-//        if (isset($customer['tenant']['domains'])) {
-//            if (count($customer['tenant']['domains']) === 1) {
-//                $domain = $customer['tenant']['domains'][0]['domain'];
-//            } else {
-//                $domain = $customer['tenant']['domains'][1]['domain'];
-//            }
-//
-//            $results = localAPI('UpdateClientProduct', [
-//                'domain' => $domain,
-//                'serviceid' => $params['serviceid']
-//            ]);
-//
-//            if ($results['result'] !== 'success') {
-//                logModuleCall(
-//                    'mediacpcloud',
-//                    __FUNCTION__,
-//                    json_encode([
-//                        'domain' => $domain,
-//                        'serviceid' => $params['serviceid']
-//                    ]),
-//                    $results['result'],
-//                    $results['result']
-//                );
-//            }
-//        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -281,6 +262,12 @@ function mediacpcloud_SuspendAccount(array $params)
             $response
         );
 
+        $result = \json_decode($response, true);
+
+        if (isset($result['message'])) {
+            return $result['message'];
+        }
+
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -331,6 +318,12 @@ function mediacpcloud_UnsuspendAccount(array $params)
             $response,
             $response
         );
+
+        $result = \json_decode($response, true);
+
+        if (isset($result['message'])) {
+            return $result['message'];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -381,6 +374,12 @@ function mediacpcloud_TerminateAccount(array $params)
             $response,
             $response
         );
+
+        $result = \json_decode($response, true);
+
+        if (isset($result['message'])) {
+            return $result['message'];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -481,6 +480,13 @@ function mediacpcloud_ChangePackage(array $params)
             $response,
             $response
         );
+
+        $result = \json_decode($response, true);
+
+        if (isset($result['message'])) {
+            return $result['message'];
+        }
+
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(

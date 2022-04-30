@@ -9,6 +9,8 @@ use WHMCS\UsageBilling\Metrics\Units\GigaBytes;
 use WHMCS\UsageBilling\Metrics\Units\WholeNumber;
 use WHMCS\UsageBilling\Metrics\Usage;
 
+use Illuminate\Database\Capsule\Manager as DB;
+
 class MetricsProvider implements ProviderInterface
 {
     private $moduleParams = [];
@@ -66,11 +68,20 @@ class MetricsProvider implements ProviderInterface
 
     public function usage()
     {
-        $serverData = $this->apiCall('stats');
-        $usage = [];
-        foreach ($serverData as $data) {
-            $usage[$data['username']] = $this->wrapUserData($data);
-        }
+
+	$usage = [];
+	$server = DB::table('tblservers')->find($this->moduleParams['serverid']);
+	$hosting = DB::table('tblhosting')
+	->leftJoin('tblproducts','tblproducts.id','=','tblhosting.packageid') #packageid
+	->where('server',$this->moduleParams['serverid'])
+	->where('domainstatus','Active')
+	->where('servertype','mediacpcloud');
+
+	if ( $hosting->count() > 0 ){
+		foreach($hosting->get() as $acc){
+			$usage[$acc->domain] = $this->tenantUsage($acc->domain);
+		}	
+	}
 
         return $usage;
     }
@@ -78,7 +89,6 @@ class MetricsProvider implements ProviderInterface
     public function tenantUsage($customerId)
     {
         $userData = $this->apiCall('/api/customers/' . $customerId. '/stats');
-
         return $this->wrapUserData($userData);
     }
 

@@ -176,7 +176,6 @@ function mediacpcloud_CreateAccount(array $params)
             'mediacpcloud',
             __FUNCTION__,
             json_encode([
-                'params' => $params,
                 'url' => $requestUrl,
                 'token' => $params['serveraccesshash'],
                 'payload' => $payload

@@ -168,7 +168,7 @@ function mediacpcloud_ListAccounts(array $params){
 		// In this example, the unique identifier is the domain name
 		'uniqueIdentifier' => $account['id'], 
 		// The accounts package on the remote server
-		'product' => $account['plan_id'],
+		'product' => $account['plan'],
 		// The remote accounts primary IP Address
 		'primaryip' => '', 
 		// The remote accounts creation date (Format: Y-m-d H:i:s)
@@ -220,7 +220,7 @@ function mediacpcloud_CreateAccount(array $params)
             'name'  => $params['clientsdetails']['fullname'],
             'email' => $params['clientsdetails']['email'],
             'password' => $params['password'],
-            'plan_id' => $params['configoption1'],
+            'plan' => $params['configoption1'],
             'password_confirmation' => $params['password'],
         ];
         $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');
@@ -519,7 +519,7 @@ function mediacpcloud_ChangePackage(array $params)
 {
     try {
         $payload = [
-            'plan_id'    => $params['configoption1'],
+            'plan'    => $params['configoption1'],
         ];
 
         $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers/' . $params['domain']);

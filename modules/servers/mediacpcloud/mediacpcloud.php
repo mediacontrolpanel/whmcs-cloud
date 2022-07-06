@@ -140,7 +140,7 @@ function mediacpcloud_LoaderFunction($params)
     // ['value' => 'Display Label']
     $list = [];
     foreach ($packages as $package) {
-        $list[$package['id']] = ucfirst($package['name']);
+        $list[$package['name']] = ucfirst($package['name']);
     }
 
     return $list;

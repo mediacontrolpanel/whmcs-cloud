@@ -62,6 +62,9 @@ function mediacpcloud_MetaData()
         'DefaultSSLPort' => '443', // Default SSL Connection Port
         'ServiceSingleSignOnLabel' => 'Login to Panel as User',
         'AdminSingleSignOnLabel' => 'Login to Panel as Admin',
+		'ListAccountsUniqueIdentifierDisplayName' => 'Customer ID',
+		'ListAccountsUniqueIdentifierField' => 'domain',
+		'ListAccountsProductField' => 'configoption1',
     );
 }
 
@@ -143,6 +146,57 @@ function mediacpcloud_LoaderFunction($params)
     return $list;
 }
 
+
+function mediacpcloud_ListAccounts(array $params){
+		
+    $requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], '/api/customers');
+    $response = request('get', $requestUrl, $params['serveraccesshash']);
+
+    // Attempt to decode the response
+	$accounts = [];
+	foreach(json_decode($response,true) as $account){
+		$accounts[] = [
+
+		// The remote accounts email address
+		'email' => $account['email'], 
+		
+		// The remote accounts username
+		'username' => $account['email'], 
+		// The remote accounts primary domain name
+		'domain' => $account['id'], 
+		// This can be one of the above fields or something different.
+		// In this example, the unique identifier is the domain name
+		'uniqueIdentifier' => $account['id'], 
+		// The accounts package on the remote server
+		'product' => $account['plan_id'],
+		// The remote accounts primary IP Address
+		'primaryip' => '', 
+		// The remote accounts creation date (Format: Y-m-d H:i:s)
+		'created' => $account['created_at'], 
+		// The remote accounts status (Status::ACTIVE or Status::SUSPENDED)
+		'status' => $account['suspended_at'] === NULL ? Status::ACTIVE : Status::SUSPENDED, 
+		];
+	}
+	
+    logModuleCall(
+        'mediacpcloud',
+        __FUNCTION__,
+		json_encode([
+			'url' => $requestUrl,
+			'token' => $params['serveraccesshash'],
+			'payload' => []
+		]),
+        $response,
+        $response
+    );
+	
+	return [
+		'success' => true,
+		'accounts' => $accounts,
+	];
+}
+
+
 /**
  * Provision a new instance of a product/service.
  *
@@ -222,7 +276,11 @@ function mediacpcloud_CreateAccount(array $params)
 
         return $e->getMessage();
     }
-
+	
+	# Update WHMCS Username
+	# TODO: Move this into eloquent style
+	full_query("UPDATE tblhosting SET username='".  $customer['email']  ."' WHERE id='".$params["accountid"]."'");
+    
     return 'success';
 }
 

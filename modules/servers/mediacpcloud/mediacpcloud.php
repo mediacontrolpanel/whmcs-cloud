@@ -101,6 +101,18 @@ function mediacpcloud_ConfigOptions()
             'Loader' => 'mediacpcloud_LoaderFunction',
             'SimpleMode' => true,
         ],
+		'create_live' => [
+			'FriendlyName' => 'Create Live',
+            'Type'         => 'yesno',
+            'Size'         => '25',
+            'Description'  => 'Tick to automatically create a live channel',
+		],
+		'create_tv' => [
+			'FriendlyName' => 'Create TV',
+            'Type'         => 'yesno',
+            'Size'         => '25',
+            'Description'  => 'Tick to automatically create a tv channel',
+		],
     );
 }
 
@@ -280,6 +292,90 @@ function mediacpcloud_CreateAccount(array $params)
 	# Update WHMCS Username
 	# TODO: Move this into eloquent style
 	full_query("UPDATE tblhosting SET username='".  $customer['email']  ."' WHERE id='".$params["accountid"]."'");
+	
+	# Lookup plan details if creating live or tv channel
+	if ( $params['configoption2'] == 'on' || $params['configoption3'] == 'on' ){
+		# Lookup plan details for bitrate
+		$requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], "/api/plans");
+		$response = request('get', $requestUrl, $params['serveraccesshash']);
+		$plans = \json_decode($response);
+		$bitrate = 4092;
+		foreach($plans as $plan){
+			if ($plan->name == $params['configoption1']) break;
+		}
+	}
+	
+	# Create live channel
+	if ( $params['configoption2'] == 'on' ){
+		
+		$channelName = $params['clientsdetails']['fullname'] . "'s Channel";
+		if ( !empty($params['clientdetails']['companyname']) && strlen($params['clientdetails']['companyname']) > 2 ){
+			$channelName = $params['clientdetails']['companyname'];
+		}
+
+		try {
+			$payload = [
+				'name' => $channelName,
+				'type' => 'live',
+				'bitrate' => $plan->bitrate, // Default to plan bitrate
+				'allow_publishing' => $plan->allow_publishing ?? false,
+				'allow_rewind' => $plan->allow_rewind ?? false,
+				'allow_recording' => $plan->allow_recording ?? false,
+				'reduced_latency' => $plan->reduced_latency ?? false,
+				'allow_advertising' => $plan->allow_advertising ?? false,
+			];
+			$requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], "/api/tenants/customers/{$customer['id']}/channels");
+			$response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+			var_dump($response);exit;
+		} catch (Exception $e) {
+			// Record the error in WHMCS's module log.
+			logModuleCall(
+				'mediacpcloud',
+				__FUNCTION__,
+				$params,
+				$e->getMessage(),
+				$e->getTraceAsString()
+			);
+
+			return $e->getMessage();
+		}
+	}
+	
+	# Create tv channel
+	if ( $params['configoption2'] == 'on' ){
+		
+		$channelName = $params['clientsdetails']['fullname'] . "'s TV Channel";
+		if ( !empty($params['clientdetails']['companyname']) && strlen($params['clientdetails']['companyname']) > 2 ){
+			$channelName = $params['clientdetails']['companyname'];
+		}
+
+		try {
+			$payload = [
+				'name' => $channelName,
+				'type' => 'tv',
+				'bitrate' => $plan->bitrate, // Default to plan bitrate
+				'allow_publishing' => $plan->allow_publishing ?? false,
+				'allow_rewind' => $plan->allow_rewind ?? false,
+				'allow_recording' => $plan->allow_recording ?? false,
+				'reduced_latency' => $plan->reduced_latency ?? false,
+				'allow_advertising' => $plan->allow_advertising ?? false,
+			];
+			$requestUrl = requestUrl($params['serverhttpprefix'], $params['serverhostname'], $params['serverport'], "/api/tenants/customers/{$customer['id']}/channels");
+			$response = request('post', $requestUrl, $params['serveraccesshash'], $payload);
+			var_dump($response);exit;
+		} catch (Exception $e) {
+			// Record the error in WHMCS's module log.
+			logModuleCall(
+				'mediacpcloud',
+				__FUNCTION__,
+				$params,
+				$e->getMessage(),
+				$e->getTraceAsString()
+			);
+
+			return $e->getMessage();
+		}
+	}
     
     return 'success';
 }

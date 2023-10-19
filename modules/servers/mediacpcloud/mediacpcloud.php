@@ -1020,7 +1020,7 @@ function mediacpcloud_AdminSingleSignOn(array $params)
  * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
  *
  * @return array
- *
+ */
 function mediacpcloud_ClientArea(array $params)
 {
     // Determine the requested action and set service call parameters based on
@@ -1040,14 +1040,10 @@ function mediacpcloud_ClientArea(array $params)
         // values provided by WHMCS in `$params`.
         $response = array();
 
-        $extraVariable1 = 'abc';
-        $extraVariable2 = '123';
-
         return array(
             'tabOverviewReplacementTemplate' => $templateFile,
             'templateVariables' => array(
-                'extraVariable1' => $extraVariable1,
-                'extraVariable2' => $extraVariable2,
+                'serverhostname' => $params['serverhostname'],
             ),
         );
     } catch (Exception $e) {
@@ -1069,7 +1065,7 @@ function mediacpcloud_ClientArea(array $params)
         );
     }
 }
-*/
+
 if (!function_exists('requestUrl')) {
     function requestUrl($serverhttpprefix, $serverhostname, $serverport, $path)
     {

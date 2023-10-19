@@ -102,8 +102,10 @@
 
 <br />
 
-<h3>Usage</h3>
-<hr />
-{include file="$template/clientareaproductusagebilling.tpl"}
+{if $metricStats}
+    <h3>Usage</h3>
+    <hr />
+    {include file="$template/clientareaproductusagebilling.tpl"}
+{/if}
 <br />
 <br />

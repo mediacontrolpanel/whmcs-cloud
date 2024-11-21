@@ -69,6 +69,12 @@ class MetricsProvider implements ProviderInterface
                 MetricInterface::TYPE_SNAPSHOT,
                 new WholeNumber('Publishers', 'publisher', 'publishers')
             ),
+            new Metric(
+                'transcoder_channels',
+                'Transcoder Channels',
+                MetricInterface::TYPE_SNAPSHOT,
+                new WholeNumber('Transcoder Channels', 'channel', 'channels')
+            ),
         ];
     }
 

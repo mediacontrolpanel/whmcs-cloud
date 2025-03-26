@@ -342,7 +342,7 @@ function mediacpcloud_CreateAccount(array $params)
 	}
 	
 	# Create tv channel
-	if ( $params['configoption2'] == 'on' ){
+	if ( $params['configoption3'] == 'on' ){
 		
 		$channelName = $params['clientsdetails']['fullname'] . "'s TV Channel";
 		if ( !empty($params['clientdetails']['companyname']) && strlen($params['clientdetails']['companyname']) > 2 ){
